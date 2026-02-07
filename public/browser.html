@@ -1,0 +1,36 @@
+<head>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+  <div class="browser-container">
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tabs" id="tabsContainer"></div>
+      <button class="new-tab-btn" id="newTabBtn" title="New Tab">+</button>
+    </div>
+
+    <!-- Address Bar and Controls -->
+    <form id="idk" class="address-bar">
+      <input
+        id="url"
+        type="text"
+        class="search-input search"
+        placeholder="Search or enter URL"
+      />
+      <select id="proxysel" class="proxy-select">
+        <option value="uv">ultraviolet</option>
+        <option value="scramjet">scramjet</option>
+      </select>
+    </form>
+
+    <!-- Iframe Container -->
+    <div class="iframe-container" id="iframeContainer"></div>
+  </div>
+
+  <script src="/baremux/index.js" defer></script>
+  <script src="/uv/uv.bundle.js" defer></script>
+  <script src="/uv/uv.config.js" defer></script>
+  <script src="/scram/scramjet.all.js" defer></script>
+  <script src="/stuff.js" defer></script>
+</body>

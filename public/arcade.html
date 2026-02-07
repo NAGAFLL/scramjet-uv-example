@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning</title>
+    <base href="https://cdn.jsdelivr.net/gh/gn-math/gn-math.github.io@main/">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- THEME CONFIGURATION --- */
+        :root {
+            --bg-color: #050505;
+            --sidebar-bg: #0a0a0a;
+            --card-bg: #111111;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent: #5865F2; /* Discord-like blue, or change to your preference */
+            --border: #222222;
+        }
+
+        /* --- GLOBAL RESET --- */
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; outline: none; }
+        body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* --- HEADER (ARCADE STYLE) --- */
+        header {
+            height: 60px;
+            background: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .brand { font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; }
+
+        .search-wrapper {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 20px;
+            position: relative;
+        }
+
+        #searchBar {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        #searchBar:focus { border-color: var(--accent); }
+
+        .controls { display: flex; gap: 10px; }
+        .btn-small { background: var(--card-bg); border: 1px solid var(--border); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
+        .btn-small:hover { background: #222; }
+
+        /* --- MAIN CONTAINER --- */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* DETAILS / SUMMARY STYLING */
+        details { width: 100%; }
+        summary { cursor: pointer; font-size: 1.1rem; color: var(--text-muted); margin-bottom: 16px; transition: 0.2s; user-select: none; }
+        summary:hover { color: #fff; }
+
+        /* --- GRID SYSTEM --- */
+        .zone-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
+
+        /* --- GAME CARDS --- */
+        .zone-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            aspect-ratio: 1/1.2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .zone-item:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); border-color: var(--accent); }
+
+        .zone-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-grow: 1;
+        }
+
+        .zone-item .card-title {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.85);
+            padding: 10px;
+            font-size: 0.8rem;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+
+        /* --- GAME VIEWER (IFRAME OVERLAY) --- */
+        #zoneViewer {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-color);
+            z-index: 2000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+        }
+
+        .viewer-header {
+            height: 50px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        #zoneFrame { border: none; flex: 1; width: 100%; background: #fff; }
+        
+        /* Spinner */
+        #zoneLoading {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: none; pointer-events: none;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* --- POPUP (Settings/Contact) --- */
+        #popupOverlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 3000; display: none; align-items: center; justify-content: center;
+        }
+        .popup {
+            background: var(--card-bg); width: 400px; padding: 20px;
+            border-radius: 12px; border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .popup h3 { margin-top: 0; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">ARCADE (Some games are broken)</div>
+        <div class="search-wrapper">
+            <input type="text" id="searchBar" placeholder="Search for games..." oninput="filterZones()">
+        </div>
+        <div class="controls">
+            <select id="sortOptions" class="btn-small" onchange="sortZones()">
+                <option value="popular">Popular</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="id">Newest</option>
+            </select>
+            <button class="btn-small" onclick="toggleSettings()">Settings</button>
+        </div>
+    </header>
+
+    <main id="mainContent">
+        <details id="featuredWrapper" open>
+            <summary id="featuredSummary">Featured Zones</summary>
+            <div id="featuredZones" class="zone-container">Loading...</div>
+        </details>
+
+        <details id="allWrapper" open>
+            <summary id="allSummary">All Zones</summary>
+            <div id="container" class="zone-container">Loading...</div>
+        </details>
+    </main>
+
+    <div id="zoneViewer">
+        <div class="viewer-header">
+            <span id="zoneName" style="font-weight: 900;">Game Title</span>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-small" onclick="fullscreenZone()">Fullscreen</button>
+                <button class="btn-small" onclick="closeZone()" style="border-color: #ff4444; color: #ff4444;">Close</button>
+            </div>
+        </div>
+        <div id="zoneLoading"><div class="spinner"></div></div>
+        <iframe id="zoneFrame"></iframe>
+        <span id="zoneId" style="display: none;"></span>
+    </div>
+
+    <div id="popupOverlay">
+        <div class="popup">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="popupTitle">Settings</h3>
+                <button class="btn-small" onclick="document.getElementById('popupOverlay').style.display='none'">X</button>
+            </div>
+            <div id="popupBody">
+                <p>Theme: Dark (Default)</p>
+                <button class="btn-small" onclick="alert('Cleared Recent Data')">Clear History</button>
+                <br><br>
+                <p style="font-size:0.8rem; color:#666;">Data provided by GN-Math Repository.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const container = document.getElementById('container');
+        const featuredContainer = document.getElementById('featuredZones');
+        const zoneViewer = document.getElementById('zoneViewer');
+        let zoneFrame = document.getElementById('zoneFrame');
+        const searchBar = document.getElementById('searchBar');
+        const sortOptions = document.getElementById('sortOptions');
+        
+        // Sources
+        const zonesURL = "https://cdn.jsdelivr.net/gh/gn-math/assets@main/zones.json";
+        const coverURL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
+        const htmlURL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
+        
+        let zones = [];
+        let popularityData = {};
+
+        // --- INITIALIZATION ---
+        async function listZones() {
+            try {
+                // Fetch the big list of games
+                const response = await fetch(zonesURL + "?t=" + Date.now());
+                const json = await response.json();
+                zones = json;
+                
+                // Fetch stats for sorting
+                await fetchPopularity();
+                
+                // Initial Render
+                sortZones();
+                
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = "Error loading zones. Please check your internet connection.";
+            }
+        }
+
+        async function fetchPopularity() {
+            try {
+                const response = await fetch("https://data.jsdelivr.com/v1/stats/packages/gh/gn-math/html@main/files?period=year");
+                const data = await response.json();
+                data.forEach(file => {
+                    // Extract ID from filename (/123.html -> 123)
+                    const idMatch = file.name.match(/\/(\d+)\.html$/);
+                    if (idMatch) {
+                        popularityData[parseInt(idMatch[1])] = file.hits.total;
+                    }
+                });
+            } catch (error) {
+                console.log("Could not load popularity stats, using default order.");
+            }
+        }
+
+        // --- DISPLAY LOGIC ---
+        function sortZones() {
+            const sortBy = sortOptions.value;
+            
+            // Sort Logic
+            if (sortBy === 'name') {
+                zones.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortBy === 'id') {
+                zones.sort((a, b) => b.id - a.id); // Newest first
+            } else if (sortBy === 'popular') {
+                zones.sort((a, b) => (popularityData[b.id] || 0) - (popularityData[a.id] || 0));
+            }
+            
+            // Ensure ID -1 (Discord/Special) is usually last or first depending on pref, but here we keep standard
+            
+            // Render
+            const featured = zones.filter(z => z.featured || z.id === 0); 
+            // Note: GN-math often marks ID 0 as featured
+            
+            displayZones(featured, featuredContainer);
+            displayZones(zones, container);
+            
+            // Update Headers
+            document.getElementById("featuredSummary").textContent = `Featured (${featured.length})`;
+            document.getElementById("allSummary").textContent = `All Games (${zones.length})`;
+        }
+
+        function displayZones(list, targetElement) {
+            targetElement.innerHTML = "";
+            
+            list.forEach(file => {
+                const zoneItem = document.createElement("div");
+                zoneItem.className = "zone-item";
+                
+                // Image Logic
+                const img = document.createElement("img");
+                const rawCover = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+                img.src = rawCover;
+                img.loading = "lazy";
+                img.onerror = function() { this.src = 'https://via.placeholder.com/150/000000/FFFFFF/?text=Game'; }; // Fallback
+                
+                // Title Overlay
+                const title = document.createElement("div");
+                title.className = "card-title";
+                title.textContent = file.name;
+
+                zoneItem.appendChild(img);
+                zoneItem.appendChild(title);
+                
+                // Click Event
+                zoneItem.onclick = () => openZone(file);
+                
+                targetElement.appendChild(zoneItem);
+            });
+
+            if (list.length === 0) targetElement.innerHTML = "<p style='padding:10px; color:#666;'>No games found.</p>";
+        }
+
+        function filterZones() {
+            const query = searchBar.value.toLowerCase();
+            const filteredZones = zones.filter(zone => zone.name.toLowerCase().includes(query));
+            
+            if (query.length > 0) {
+                // If searching, hide featured to reduce clutter
+                document.getElementById("featuredWrapper").removeAttribute("open");
+            } else {
+                document.getElementById("featuredWrapper").setAttribute("open", "");
+            }
+            
+            displayZones(filteredZones, container);
+        }
+
+        // --- GAME VIEWER LOGIC ---
+        function openZone(file) {
+            // Show Viewer
+            zoneViewer.style.display = "flex";
+            document.getElementById('zoneName').textContent = file.name;
+            document.getElementById('zoneId').textContent = file.id;
+
+            // Show Spinner
+            document.getElementById("zoneLoading").style.display = "block";
+            
+            // Prepare Frame
+            if (file.url.startsWith("http") && !file.url.includes("{HTML_URL}")) {
+                // Direct Link (rare in this repo, but possible)
+                zoneFrame.src = file.url;
+                zoneFrame.onload = () => { document.getElementById("zoneLoading").style.display = "none"; };
+            } else {
+                // Repository Fetch
+                const url = file.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+                
+                fetch(url + "?t=" + Date.now())
+                    .then(response => response.text())
+                    .then(html => {
+                        // We write the HTML directly into the iframe
+                        const doc = zoneFrame.contentDocument || zoneFrame.contentWindow.document;
+                        doc.open();
+                        doc.write(html);
+                        doc.close();
+                        
+                        // Hide Spinner
+                        document.getElementById("zoneLoading").style.display = "none";
+                    })
+                    .catch(err => {
+                        alert("Error loading game: " + err);
+                        closeZone();
+                    });
+            }
+        }
+
+        function closeZone() {
+            zoneViewer.style.display = "none";
+            zoneFrame.src = "about:blank"; // Stop audio/game loop
+            const doc = zoneFrame.contentDocument || zoneFrame.contentWindow.document;
+            doc.open(); doc.write(""); doc.close(); // Double clear
+        }
+
+        function fullscreenZone() {
+            if (zoneFrame.requestFullscreen) zoneFrame.requestFullscreen();
+            else if (zoneFrame.webkitRequestFullscreen) zoneFrame.webkitRequestFullscreen();
+        }
+
+        function toggleSettings() {
+            const popup = document.getElementById('popupOverlay');
+            popup.style.display = (popup.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        // --- STARTUP ---
+        window.onload = listZones;
+
+    </script>
+</body>
+</html>
+

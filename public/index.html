@@ -1,21 +1,435 @@
-<body>
-  <form id="idk">
-    <input
-      id="url"
-      type="text"
-      class="search-input search"
-      placeholder="Search"
-    />
-    <select id="proxysel">
-      <option value="uv">ultraviolet</option>
-      <option value="scramjet">scramjet</option>
-    </select>
-  </form>
-  <iframe id="iframe" width="100%" height="100%"></iframe>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula OS</title>
+    <link id="favicon" rel="icon" href="https://cdn.jsdelivr.net/gh/gn-math/assets@main/favicon.ico">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; user-select: none; color: white; }
+        
+        #desktop {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
+            z-index: 0; transition: background 0.5s ease;
+        }
 
-  <script src="/baremux/index.js" defer></script>
-  <script src="/uv/uv.bundle.js" defer></script>
-  <script src="/uv/uv.config.js" defer></script>
-  <script src="/scram/scramjet.all.js" defer></script>
-  <script src="/stuff.js" defer></script>
+        /* Window System */
+        .window {
+            position: absolute; background: #1e1e24; border-radius: 8px;
+            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2), 0 20px 60px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; overflow: hidden;
+            animation: popIn 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .window-header {
+            height: 38px; background: #141419; border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 12px; cursor: default;
+        }
+        .win-title { font-size: 13px; font-weight: 600; color: #a5b4fc; display: flex; align-items: center; gap: 8px; }
+        .win-controls { display: flex; gap: 6px; }
+        .win-btn { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+        .win-btn.close { background: #ef4444; } 
+        .win-btn.max { background: #fbbf24; } 
+        .win-btn.min { background: #22c55e; }
+
+        /* Taskbar */
+        #taskbar {
+            position: absolute; bottom: 0; width: 100%; height: 48px;
+            background: rgba(10, 10, 15, 0.85); backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; padding: 0 12px; z-index: 9999;
+        }
+        .tb-icon {
+            width: 42px; height: 42px; border-radius: 6px; margin: 0 4px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; color: #818cf8; transition: 0.2s; position: relative;
+        }
+        .tb-icon:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .tb-icon.active::after {
+            content: ''; position: absolute; bottom: 4px; width: 20px; height: 3px;
+            background: #818cf8; border-radius: 2px;
+        }
+
+        /* Desktop Icons */
+        #desktop-grid { padding: 20px; display: flex; flex-direction: column; gap: 20px; flex-wrap: wrap; height: 100%; align-content: flex-start; position: relative; z-index: 10; pointer-events: none; }
+        .dt-icon {
+            width: 80px; display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; padding: 10px; border-radius: 8px; border: 1px solid transparent;
+            pointer-events: auto; transition: 0.1s;
+        }
+        .dt-icon:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.1); backdrop-filter: blur(4px); }
+        .dt-icon svg { width: 36px; height: 36px; margin-bottom: 8px; stroke: #c7d2fe; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
+        .dt-icon span { font-size: 12px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); text-align: center; color: #e0e7ff; font-weight: 500; }
+        
+        /* Form elements for Settings */
+        select { -webkit-appearance: none; appearance: none; }
+    </style>
+</head>
+<body>
+
+    <div id="desktop">
+        <canvas id="bg-canvas" style="position:absolute; inset:0;"></canvas>
+        <div id="desktop-grid"></div>
+    </div>
+
+    <div id="taskbar">
+        <div class="flex items-center gap-2 mr-4 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+            <i data-lucide="search" width="14" class="text-gray-400"></i>
+            <span class="text-xs text-gray-400">Search...</span>
+        </div>
+        <div id="taskbar-apps" class="flex"></div>
+        <div class="ml-auto text-xs text-indigo-300 font-mono flex items-center gap-3">
+            <i data-lucide="wifi" width="14"></i>
+            <div id="clock">12:00</div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION
+        const APPS = {
+            arcade: { name: 'Arcade', icon: 'gamepad-2', width: 950, height: 650, url: 'arcade.html' },
+            calculator: { name: 'Calc', icon: 'calculator', width: 300, height: 420, custom: true },
+            browser: { name: 'Browser', icon: 'globe', width: 800, height: 600, url: 'browser.html' },
+            settings: { name: 'Settings', icon: 'settings', width: 500, height: 500, custom: true } 
+        };
+
+        const CUSTOM_HTML = {
+            calculator: `
+                <div class="h-full bg-gray-900 p-4 flex flex-col">
+                    <div id="calc-res" class="bg-black/50 text-right text-3xl p-4 rounded mb-4 font-mono">0</div>
+                    <div class="grid grid-cols-4 gap-2 flex-1">
+                        <button onclick="calc('C')" class="bg-red-500/20 text-red-400 rounded">C</button>
+                        <button onclick="calc('/')" class="bg-indigo-500/20 text-indigo-300 rounded">÷</button>
+                        <button onclick="calc('*')" class="bg-indigo-500/20 text-indigo-300 rounded">×</button>
+                        <button onclick="calc('-')" class="bg-indigo-500/20 text-indigo-300 rounded">-</button>
+                        <button onclick="calc('7')" class="bg-white/10 rounded">7</button>
+                        <button onclick="calc('8')" class="bg-white/10 rounded">8</button>
+                        <button onclick="calc('9')" class="bg-white/10 rounded">9</button>
+                        <button onclick="calc('+')" class="bg-indigo-500/20 text-indigo-300 rounded">+</button>
+                        <button onclick="calc('4')" class="bg-white/10 rounded">4</button>
+                        <button onclick="calc('5')" class="bg-white/10 rounded">5</button>
+                        <button onclick="calc('6')" class="bg-white/10 rounded">6</button>
+                        <button onclick="calc('=')" class="row-span-2 bg-green-500/20 text-green-400 rounded">=</button>
+                        <button onclick="calc('1')" class="bg-white/10 rounded">1</button>
+                        <button onclick="calc('2')" class="bg-white/10 rounded">2</button>
+                        <button onclick="calc('3')" class="bg-white/10 rounded">3</button>
+                        <button onclick="calc('0')" class="col-span-2 bg-white/10 rounded">0</button>
+                        <button onclick="calc('.')" class="bg-white/10 rounded">.</button>
+                    </div>
+                </div>`,
+            browser: `
+                <div class="flex flex-col h-full bg-zinc-900">
+                    <div class="flex p-2 gap-2 bg-zinc-800 border-b border-white/10">
+                        <input id="web-url" class="flex-grow bg-black/30 border border-white/10 rounded px-3 py-1 text-sm text-white" value="https://www.bing.com">
+                        <button onclick="document.getElementById('web-frame').src = document.getElementById('web-url').value" class="bg-indigo-600 px-3 rounded text-xs">Go</button>
+                    </div>
+                    <iframe id="web-frame" src="https://www.bing.com" class="flex-grow bg-white border-none"></iframe>
+                </div>`,
+            settings: `
+                <div class="h-full bg-slate-900 p-6 text-slate-200 overflow-y-auto">
+                    <h2 class="text-xl font-semibold mb-6 border-b border-white/10 pb-2">Settings</h2>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-3 font-bold">Wallpaper</h3>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div onclick="setWallpaper('default')" class="h-16 rounded bg-gradient-to-br from-indigo-900 to-black cursor-pointer border-2 border-transparent hover:border-indigo-500 transition shadow-lg" title="Nebula"></div>
+                            <div onclick="setWallpaper('emerald')" class="h-16 rounded bg-gradient-to-br from-emerald-900 to-black cursor-pointer border-2 border-transparent hover:border-emerald-500 transition shadow-lg" title="Forest"></div>
+                            <div onclick="setWallpaper('rose')" class="h-16 rounded bg-gradient-to-br from-rose-900 to-black cursor-pointer border-2 border-transparent hover:border-rose-500 transition shadow-lg" title="Crimson"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-3 font-bold">System</h3>
+                        <button onclick="toggleTimeFormat()" class="w-full bg-white/5 hover:bg-white/10 p-3 rounded text-left flex justify-between items-center transition border border-white/5">
+                            <span class="text-sm">24-Hour Clock</span>
+                            <span id="time-fmt-status" class="text-[10px] bg-white/10 text-gray-400 px-2 py-0.5 rounded font-mono">OFF</span>
+                        </button>
+                    </div>
+
+                    <div class="mb-6 p-4 bg-red-500/5 border border-red-500/10 rounded-lg">
+                        <h3 class="text-xs uppercase tracking-wider text-red-400 mb-4 font-bold flex items-center gap-2">
+                            <i data-lucide="venetian-mask" width="14"></i> Stealth Mode
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-[11px] text-gray-400 block mb-1">Tab Disguise</label>
+                                <select onchange="setCloak(this.value)" class="w-full bg-black/20 border border-white/10 rounded p-2 text-xs text-slate-300 outline-none focus:border-indigo-500 transition">
+                                    <option value="default">Default (Nebula OS)</option>
+                                    <option value="drive">Google Drive</option>
+                                    <option value="classroom">Google Classroom</option>
+                                    <option value="gmail">Gmail</option>
+                                    <option value="zoom">Zoom</option>
+                                </select>
+                            </div>
+
+                            <button onclick="openInAboutBlank()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 p-2.5 rounded text-xs transition flex items-center justify-center gap-2">
+                                <i data-lucide="external-link" width="14"></i> Launch in About:Blank
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 text-center">
+                        <p class="text-[10px] text-gray-600">Nebula OS v1.1.0</p>
+                    </div>
+                </div>
+            `
+        };
+
+        let zIndex = 100;
+        let cExpr = '';
+        let is24Hour = false; 
+
+        // --- CLOAKING LOGIC ---
+        window.setCloak = (type) => {
+            const config = {
+                'default': { title: 'Nebula OS', icon: 'https://cdn.jsdelivr.net/gh/gn-math/assets@main/favicon.ico' },
+                'drive': { title: 'My Drive - Google Drive', icon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' },
+                'classroom': { title: 'Classes', icon: 'https://www.gstatic.com/classroom/ic_product_classroom_32.png' },
+                'gmail': { title: 'Inbox (1) - Gmail', icon: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico' },
+                'zoom': { title: 'Zoom Meeting', icon: 'https://st1.zoom.us/static/6.3.12613/image/favicon.ico' }
+            };
+
+            const data = config[type] || config['default'];
+            document.title = data.title;
+            const link = document.getElementById('favicon');
+            if (link) link.href = data.icon;
+        };
+
+        window.openInAboutBlank = () => {
+            const win = window.open('about:blank', '_blank');
+            if (!win) {
+                alert("Popup blocked! Allow popups to use Stealth Mode.");
+                return;
+            }
+            
+            // Inject current URL into an iframe inside the new window
+            const html = `
+                <!DOCTYPE html>
+                <html style="margin:0; height:100%; overflow:hidden;">
+                <head>
+                    <title>Google Drive</title>
+                    <link rel="icon" href="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png">
+                    <style>
+                        body { margin:0; padding:0; height:100%; overflow:hidden; background:#000; }
+                        iframe { width:100%; height:100%; border:none; display:block; }
+                    </style>
+                </head>
+                <body>
+                    <iframe src="${window.location.href}" allowfullscreen></iframe>
+                </body>
+                </html>
+            `;
+            
+            win.document.write(html);
+            win.document.close();
+        };
+
+        // --- APP MANAGEMENT ---
+        function openApp(key) {
+            if(document.getElementById(`win-${key}`)) {
+                const win = document.getElementById(`win-${key}`);
+                win.style.display = 'flex';
+                win.style.zIndex = ++zIndex;
+                return;
+            }
+
+            const app = APPS[key];
+            const win = document.createElement('div');
+            win.id = `win-${key}`;
+            win.className = 'window';
+            win.style.width = app.width + 'px';
+            win.style.height = app.height + 'px';
+            win.style.zIndex = ++zIndex;
+            win.style.left = (window.innerWidth/2 - app.width/2 + (Math.random()*20)) + 'px';
+            win.style.top = (window.innerHeight/2 - app.height/2 + (Math.random()*20)) + 'px';
+
+            const inner = app.custom 
+                ? CUSTOM_HTML[key] 
+                : `<iframe src="${app.url}" style="width:100%;height:100%;border:none;"></iframe>`;
+
+            win.innerHTML = `
+                <div class="window-header" onmousedown="startDrag(event, '${key}')">
+                    <div class="win-title"><i data-lucide="${app.icon}" width="14"></i> ${app.name}</div>
+                    <div class="win-controls">
+                        <div class="win-btn min" onclick="minimize('${key}')"></div>
+                        <div class="win-btn max" onclick="maximize('${key}')"></div>
+                        <div class="win-btn close" onclick="closeApp('${key}')"></div>
+                    </div>
+                </div>
+                <div style="flex:1;position:relative;overflow:hidden">${inner}</div>
+            `;
+            
+            // Store original window state for maximize toggle
+            win.dataset.originalWidth = app.width;
+            win.dataset.originalHeight = app.height;
+            win.dataset.originalLeft = win.style.left;
+            win.dataset.originalTop = win.style.top;
+            win.dataset.isMaximized = 'false';
+            document.body.appendChild(win);
+            addTaskbar(key, app);
+            lucide.createIcons();
+            
+            if(key === 'settings') updateSettingsUI(); 
+        }
+
+        function closeApp(key) {
+            document.getElementById(`win-${key}`).remove();
+            const tb = document.getElementById(`tb-${key}`);
+            if(tb) tb.remove();
+        }
+        
+        function minimize(key) {
+            document.getElementById(`win-${key}`).style.display = 'none';
+            document.getElementById(`tb-${key}`).classList.remove('active');
+        }
+        
+        function maximize(key) {
+            const win = document.getElementById(`win-${key}`);
+            const isMaximized = win.dataset.isMaximized === 'true';
+            
+            if (isMaximized) {
+                // Restore to original size
+                win.style.width = win.dataset.originalWidth + 'px';
+                win.style.height = win.dataset.originalHeight + 'px';
+                win.style.left = win.dataset.originalLeft;
+                win.style.top = win.dataset.originalTop;
+                win.style.position = 'absolute';
+                win.dataset.isMaximized = 'false';
+            } else {
+                // Maximize to fullscreen
+                win.dataset.originalWidth = win.offsetWidth;
+                win.dataset.originalHeight = win.offsetHeight;
+                win.dataset.originalLeft = win.style.left;
+                win.dataset.originalTop = win.style.top;
+                
+                win.style.position = 'fixed';
+                win.style.left = '0';
+                win.style.top = '0';
+                win.style.width = '100%';
+                win.style.height = '100%';
+                win.style.borderRadius = '0';
+                win.style.zIndex = ++zIndex;
+                win.dataset.isMaximized = 'true';
+            }
+        }
+
+        function addTaskbar(key, app) {
+            const tb = document.getElementById('taskbar-apps');
+            const el = document.createElement('div');
+            el.id = `tb-${key}`;
+            el.className = 'tb-icon active';
+            el.innerHTML = `<i data-lucide="${app.icon}" width="20"></i>`;
+            el.onclick = () => openApp(key);
+            tb.appendChild(el);
+        }
+
+        // --- Settings Logic ---
+        window.setWallpaper = (type) => {
+            const desktop = document.getElementById('desktop');
+            if (type === 'default') desktop.style.background = 'radial-gradient(circle at center, #1e1b4b 0%, #020617 100%)';
+            if (type === 'emerald') desktop.style.background = 'radial-gradient(circle at center, #064e3b 0%, #020617 100%)';
+            if (type === 'rose') desktop.style.background = 'radial-gradient(circle at center, #881337 0%, #020617 100%)';
+        };
+
+        window.toggleTimeFormat = () => {
+            is24Hour = !is24Hour;
+            updateSettingsUI();
+            updateClock();
+        };
+
+        function updateSettingsUI() {
+            const el = document.getElementById('time-fmt-status');
+            if(el) {
+                el.innerText = is24Hour ? 'ON' : 'OFF';
+                el.className = is24Hour 
+                    ? "text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-mono"
+                    : "text-[10px] bg-white/10 text-gray-400 px-2 py-0.5 rounded font-mono";
+            }
+        }
+
+        // --- Calculator Logic ---
+        window.calc = (val) => {
+            if(val==='C') cExpr = '';
+            else if(val==='=') { try { cExpr = eval(cExpr); } catch { cExpr='Err'; } }
+            else cExpr += val;
+            const el = document.getElementById('calc-res');
+            if(el) el.innerText = cExpr || '0';
+        }
+
+        // --- Drag Logic ---
+        let dragInfo = null;
+        function startDrag(e, key) {
+            // Don't drag if clicking on control buttons
+            if (e.target.classList.contains('win-btn') || e.target.closest('.win-controls')) {
+                return;
+            }
+            const win = document.getElementById(`win-${key}`);
+            dragInfo = { win, x: e.clientX - win.offsetLeft, y: e.clientY - win.offsetTop };
+            win.style.zIndex = ++zIndex;
+            document.body.style.cursor = 'move';
+            window.addEventListener('mousemove', onDrag);
+            window.addEventListener('mouseup', stopDrag);
+        }
+        function onDrag(e) {
+            if(!dragInfo) return;
+            dragInfo.win.style.left = (e.clientX - dragInfo.x) + 'px';
+            dragInfo.win.style.top = (e.clientY - dragInfo.y) + 'px';
+        }
+        function stopDrag() { dragInfo = null; document.body.style.cursor = 'default'; window.removeEventListener('mousemove', onDrag); }
+
+        // --- Init ---
+        Object.keys(APPS).forEach(k => {
+            const d = document.createElement('div');
+            d.className = 'dt-icon';
+            d.innerHTML = `<i data-lucide="${APPS[k].icon}"></i><span>${APPS[k].name}</span>`;
+            d.onclick = () => openApp(k);
+            document.getElementById('desktop-grid').appendChild(d);
+        });
+        
+        lucide.createIcons();
+        
+        // --- Background Animation ---
+        const cvs = document.getElementById('bg-canvas');
+        const ctx = cvs.getContext('2d');
+        let parts = Array(50).fill().map(() => ({x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight, s:Math.random()*2}));
+        function draw() {
+            cvs.width=window.innerWidth; cvs.height=window.innerHeight;
+            ctx.fillStyle = '#ffffff'; 
+            parts.forEach(p => {
+                p.y -= 0.2; if(p.y<0) p.y=cvs.height;
+                ctx.globalAlpha = 0.1; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, 6); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+        
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString([], {
+                hour12: !is24Hour, 
+                hour: '2-digit', 
+                minute:'2-digit'
+            });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Check if stealth mode is active (title override) on load
+        if(window.location.href === 'about:blank') {
+            console.log("Stealth mode active");
+        }
+
+    </script>
 </body>
+</html>
+

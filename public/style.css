@@ -1,0 +1,234 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #1e1e24;
+    color: #e0e0e0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.browser-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+}
+
+/* Tab Bar Styling */
+.tab-bar {
+    display: flex;
+    align-items: center;
+    background-color: #252a32;
+    border-bottom: 1px solid #1a1a1f;
+    padding: 0;
+    height: 48px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    gap: 4px;
+    padding: 4px 4px 0 4px;
+}
+
+.tab-bar::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tab-bar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+    background: #404854;
+    border-radius: 2px;
+}
+
+.tab-bar::-webkit-scrollbar-thumb:hover {
+    background: #4a5260;
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #2f343f;
+    border: 1px solid #3a3f4a;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 40px;
+    min-width: 100px;
+    max-width: 280px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.tab:hover {
+    background-color: #383e4b;
+    border-color: #4a5260;
+}
+
+.tab.active {
+    background-color: #323a47;
+    border-color: #505968;
+    border-bottom: 2px solid #a5b4fc;
+    padding-bottom: 6px;
+}
+
+.tab-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.tab-close {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #999;
+    font-size: 16px;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.tab-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.tab-close:active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.new-tab-btn {
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    color: #888;
+    font-size: 20px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.new-tab-btn:hover {
+    background-color: #2f343f;
+    border-color: #3a3f4a;
+    color: #ccc;
+}
+
+.new-tab-btn:active {
+    background-color: #383e4b;
+}
+
+/* Address Bar Styling */
+.address-bar {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    background-color: #2a2d34;
+    border-bottom: 1px solid #1a1a1f;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px 14px;
+    background-color: #1a1d24;
+    border: 1px solid #3a3f4a;
+    border-radius: 6px;
+    color: #e0e0e0;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: #00a8ff;
+    background-color: #202730;
+    box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.1);
+}
+
+.search-input::placeholder {
+    color: #666;
+}
+
+.proxy-select {
+    padding: 10px 12px;
+    background-color: #1a1d24;
+    border: 1px solid #3a3f4a;
+    border-radius: 6px;
+    color: #e0e0e0;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.proxy-select:hover {
+    border-color: #505968;
+}
+
+.proxy-select:focus {
+    border-color: #00a8ff;
+    box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.1);
+}
+
+.proxy-select option {
+    background-color: #1e1e24;
+    color: #e0e0e0;
+}
+
+/* Iframe Container */
+.iframe-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: #1e1e24;
+}
+
+.iframe-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    background-color: white;
+}
+
+.iframe-container.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 14px;
+}
