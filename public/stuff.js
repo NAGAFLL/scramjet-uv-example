@@ -70,6 +70,7 @@ class TabManager {
     // Create iframe element
     const iframe = document.createElement("iframe");
     iframe.style.display = "none";
+    iframe.src = "/welcome.html";
     document.getElementById("iframeContainer").appendChild(iframe);
 
     const tab = {
@@ -240,5 +241,29 @@ document.getElementById("proxysel").addEventListener("change", () => {
   const activeTab = tabManager.getActiveTab();
   if (activeTab) {
     tabManager.updateActiveTab(document.getElementById("url").value, document.getElementById("proxysel").value);
+  }
+});
+
+// Handle messages from welcome page
+window.addEventListener("message", (event) => {
+  if (event.data.action === "navigate") {
+    const urlInput = document.getElementById("url");
+    const proxyType = document.getElementById("proxysel").value;
+    
+    let fixedurl = search(event.data.url);
+    let url;
+
+    if (proxyType === "uv") {
+      url = __uv$config.prefix + __uv$config.encodeUrl(fixedurl);
+    } else {
+      url = scramjet.encodeUrl(fixedurl);
+    }
+
+    const activeTab = tabManager.getActiveTab();
+    if (activeTab) {
+      activeTab.iframe.src = url;
+      tabManager.updateActiveTab(fixedurl, proxyType);
+      urlInput.value = fixedurl;
+    }
   }
 });

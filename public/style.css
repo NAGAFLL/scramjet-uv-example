@@ -6,7 +6,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #1e1e24;
+    background-color: #0f0f12;
     color: #e0e0e0;
     height: 100vh;
     overflow: hidden;
@@ -23,15 +23,15 @@ body {
 .tab-bar {
     display: flex;
     align-items: center;
-    background-color: #252a32;
-    border-bottom: 1px solid #1a1a1f;
+    background: linear-gradient(180deg, #191d24 0%, #15191e 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     padding: 0;
     height: 48px;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
-    gap: 4px;
-    padding: 4px 4px 0 4px;
+    gap: 6px;
+    padding: 6px 8px 0 8px;
 }
 
 .tab-bar::-webkit-scrollbar {
@@ -64,8 +64,8 @@ body {
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    background-color: #2f343f;
-    border: 1px solid #3a3f4a;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-bottom: none;
     border-radius: 8px 8px 0 0;
     cursor: pointer;
@@ -76,18 +76,20 @@ body {
     flex-shrink: 0;
     white-space: nowrap;
     user-select: none;
+    backdrop-filter: blur(4px);
 }
 
 .tab:hover {
-    background-color: #383e4b;
-    border-color: #4a5260;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .tab.active {
-    background-color: #323a47;
-    border-color: #505968;
+    background: rgba(165, 180, 252, 0.12);
+    border-color: rgba(165, 180, 252, 0.3);
     border-bottom: 2px solid #a5b4fc;
     padding-bottom: 6px;
+    box-shadow: 0 0 0 1px rgba(165, 180, 252, 0.1) inset;
 }
 
 .tab-title {
@@ -100,54 +102,64 @@ body {
 }
 
 .tab-close {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border-radius: 4px;
-    color: #999;
-    font-size: 16px;
+    border-radius: 3px;
+    color: rgba(136, 136, 136, 0.3);
+    font-size: 10px;
     transition: all 0.15s ease;
     flex-shrink: 0;
+    border: none;
+    position: relative;
+    opacity: 0.3;
+    background: transparent;
+    padding: 2px;
 }
 
 .tab-close:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: rgba(239, 68, 68, 0.15);
+    color: #ff6b6b;
+    opacity: 1;
 }
 
 .tab-close:active {
-    background-color: rgba(255, 255, 255, 0.2);
+    background: rgba(239, 68, 68, 0.2);
 }
 
 .new-tab-btn {
-    width: 40px;
-    height: 40px;
-    background-color: transparent;
-    border: 1px solid transparent;
-    border-radius: 8px 8px 0 0;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
     cursor: pointer;
-    color: #888;
-    font-size: 20px;
-    font-weight: bold;
+    color: #8888cc;
+    font-size: 16px;
+    font-weight: 500;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     padding: 0;
+    position: relative;
+    backdrop-filter: blur(4px);
+    margin-left: 4px;
 }
 
 .new-tab-btn:hover {
-    background-color: #2f343f;
-    border-color: #3a3f4a;
-    color: #ccc;
+    background: rgba(165, 180, 252, 0.15);
+    border-color: rgba(165, 180, 252, 0.3);
+    color: #a5b4fc;
 }
 
 .new-tab-btn:active {
-    background-color: #383e4b;
+    background: rgba(165, 180, 252, 0.25);
+    transform: scale(0.92);
 }
 
 /* Address Bar Styling */
@@ -155,8 +167,8 @@ body {
     display: flex;
     gap: 8px;
     padding: 10px 12px;
-    background-color: #2a2d34;
-    border-bottom: 1px solid #1a1a1f;
+    background: linear-gradient(180deg, #15191e 0%, #0f1318 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     align-items: center;
     flex-shrink: 0;
 }
@@ -164,19 +176,20 @@ body {
 .search-input {
     flex: 1;
     padding: 10px 14px;
-    background-color: #1a1d24;
-    border: 1px solid #3a3f4a;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
     color: #e0e0e0;
     font-size: 14px;
     transition: all 0.2s ease;
     outline: none;
+    backdrop-filter: blur(4px);
 }
 
 .search-input:focus {
-    border-color: #00a8ff;
-    background-color: #202730;
-    box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.1);
+    border-color: rgba(124, 179, 253, 0.5);
+    background: rgba(124, 179, 253, 0.08);
+    box-shadow: 0 0 0 2px rgba(124, 179, 253, 0.1);
 }
 
 .search-input::placeholder {
@@ -185,27 +198,30 @@ body {
 
 .proxy-select {
     padding: 10px 12px;
-    background-color: #1a1d24;
-    border: 1px solid #3a3f4a;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
     color: #e0e0e0;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s ease;
     outline: none;
+    backdrop-filter: blur(4px);
 }
 
 .proxy-select:hover {
-    border-color: #505968;
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .proxy-select:focus {
-    border-color: #00a8ff;
-    box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.1);
+    border-color: rgba(124, 179, 253, 0.5);
+    background: rgba(124, 179, 253, 0.08);
+    box-shadow: 0 0 0 2px rgba(124, 179, 253, 0.1);
 }
 
 .proxy-select option {
-    background-color: #1e1e24;
+    background-color: #0f1318;
     color: #e0e0e0;
 }
 
@@ -214,7 +230,7 @@ body {
     flex: 1;
     position: relative;
     overflow: hidden;
-    background-color: #1e1e24;
+    background-color: #0f0f12;
 }
 
 .iframe-container iframe {
@@ -231,4 +247,7 @@ body {
     justify-content: center;
     color: #666;
     font-size: 14px;
+}
+.address-bar {
+    border-radius: 25;
 }
