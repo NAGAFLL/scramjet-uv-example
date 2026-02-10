@@ -4,7 +4,7 @@ A modern, feature-rich proxy-based web browser with a desktop environment interf
 
 ## Features
 
-### 🖥️ Nebula OS Desktop Environment
+### Nebula OS Desktop Environment
 - **Custom Desktop OS Interface** - Experience a sleek, dark-themed desktop experience
 - **Draggable Windows** - Move and manage applications freely
 - **Window Management** - Minimize, maximize, and close applications
@@ -13,18 +13,22 @@ A modern, feature-rich proxy-based web browser with a desktop environment interf
 - **Calculator** - Built-in calculator app
 - **Stealth Mode** - Disguise your browser tab as Google Drive, Classroom, Gmail, or Zoom
 
-### 🌐 Advanced Browser with Tab System
+### Advanced Browser with Tab System
 - **Multi-Tab Support** - Open multiple tabs and switch between them seamlessly
 - **Modern Tab UI** - Close tabs, create new tabs, with visual indicators
 - **Proxy Selection** - Choose between Ultraviolet and Scramjet proxies
 - **URL Bar** - Search or enter URLs with automatic detection
 - **About:Blank Mode** - Launch the browser in a stealth about:blank window
 
-### 🛡️ Privacy & Proxy Features
+### Privacy & Proxy Features
 - **Ultraviolet Proxy** - Fast and reliable web proxy
 - **Scramjet Proxy** - Alternative proxy support
 - **Service Workers** - Offline-capable architecture
 - **WASM Support** - High-performance web proxy
+
+### Credits
+- **Credit to Gn-Math for games
+- **Credit to alivehamster's scramjet UV example for proxy
 
 ## Installation
 
