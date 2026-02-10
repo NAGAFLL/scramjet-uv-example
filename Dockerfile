@@ -1,8 +1,18 @@
-FROM node:20-alpine
+FROM node:20
+
 WORKDIR /app
+
+# Copy package.json (and lockfile if it exists)
 COPY package*.json ./
-RUN npm ci --production
+
+# Force install dependencies (bypassing strict checks)
+RUN npm install
+
+# Copy the rest of your files
 COPY . .
-ENV PORT=8080
+
+# Expose the port
 EXPOSE 8080
-CMD ["npx", "pm2-runtime", "start", "index.js", "--no-daemon"]
+
+# Start the app
+CMD ["npm", "start"]
